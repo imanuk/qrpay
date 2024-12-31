@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Head section remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Your Payment</title>
     <style>
+        /* Existing styles remain the same */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .payment-box {
             border: 1px solid #ddd;
@@ -73,47 +75,63 @@
     </div>
 
     <script>
-        // Bank configurations
+        // Bank configurations with app store links
         const banks = {
             monzo: {
                 name: 'Monzo',
-                logo: '🏦', // Using emoji as placeholder
-                pattern: 'monzo://pay?receiver={account}&amount={amount}'
+                logo: '🏦',
+                pattern: 'monzo://pay?receiver={account}&amount={amount}',
+                appStore: 'https://apps.apple.com/gb/app/monzo-bank/id1052238659',
+                playStore: 'https://play.google.com/store/apps/details?id=co.uk.getmondo'
             },
             barclays: {
                 name: 'Barclays',
                 logo: '🏦',
-                pattern: 'barclays://payments/pay?name={name}&sortcode={sort}&account={account}&amount={amount}&reference={reference}'
+                pattern: 'barclays://payments/pay?name={name}&sortcode={sort}&account={account}&amount={amount}&reference={reference}',
+                appStore: 'https://apps.apple.com/gb/app/barclays/id536248734',
+                playStore: 'https://play.google.com/store/apps/details?id=com.barclays.android.barclaysmobilebanking'
             },
             natwest: {
                 name: 'NatWest',
                 logo: '🏦',
-                pattern: 'natwest://payment?sort={sort}&acc={account}&name={name}&amount={amount}&ref={reference}'
+                pattern: 'natwest://payment?sort={sort}&acc={account}&name={name}&amount={amount}&ref={reference}',
+                appStore: 'https://apps.apple.com/gb/app/natwest-mobile-banking/id334855322',
+                playStore: 'https://play.google.com/store/apps/details?id=com.rbs.mobile.android.natwest'
             },
             lloyds: {
                 name: 'Lloyds',
                 logo: '🏦',
-                pattern: 'lloyds://payment?sort={sort}&acc={account}&name={name}&amount={amount}'
+                pattern: 'lloyds://payment?sort={sort}&acc={account}&name={name}&amount={amount}',
+                appStore: 'https://apps.apple.com/gb/app/lloyds-bank-mobile-banking/id469964520',
+                playStore: 'https://play.google.com/store/apps/details?id=com.lloydsbank.mobile'
             },
             santander: {
                 name: 'Santander',
                 logo: '🏦',
-                pattern: 'suk://payment?sort={sort}&acc={account}&name={name}&amount={amount}'
+                pattern: 'suk://payment?sort={sort}&acc={account}&name={name}&amount={amount}',
+                appStore: 'https://apps.apple.com/gb/app/santander-mobile-banking/id482973524',
+                playStore: 'https://play.google.com/store/apps/details?id=uk.co.santander.santanderUK'
             },
             halifax: {
                 name: 'Halifax',
                 logo: '🏦',
-                pattern: 'halifax://payment?sort={sort}&acc={account}&name={name}&amount={amount}'
+                pattern: 'halifax://payment?sort={sort}&acc={account}&name={name}&amount={amount}',
+                appStore: 'https://apps.apple.com/gb/app/halifax-mobile-banking/id470114736',
+                playStore: 'https://play.google.com/store/apps/details?id=com.halifax.mobile'
             },
             hsbc: {
                 name: 'HSBC',
                 logo: '🏦',
-                pattern: 'hsbc://payment?sort={sort}&acc={account}&name={name}&amount={amount}'
+                pattern: 'hsbc://payment?sort={sort}&acc={account}&name={name}&amount={amount}',
+                appStore: 'https://apps.apple.com/gb/app/hsbc-uk-mobile-banking/id1220329065',
+                playStore: 'https://play.google.com/store/apps/details?id=uk.co.hsbc.hsbcukmobilebanking'
             },
             starling: {
                 name: 'Starling',
                 logo: '🏦',
-                pattern: 'starling://payment?sort={sort}&acc={account}&name={name}&amount={amount}'
+                pattern: 'starling://payment?sort={sort}&acc={account}&name={name}&amount={amount}',
+                appStore: 'https://apps.apple.com/gb/app/starling-bank/id956806430',
+                playStore: 'https://play.google.com/store/apps/details?id=com.starlingbank.android'
             }
         };
 
@@ -127,7 +145,6 @@
                 document.getElementById('paymentTitle').textContent = data.title || 'Payment Request';
                 document.getElementById('paymentMessage').textContent = data.message || '';
                 
-                // Handle amount display/input
                 if (data.allowAmountChange) {
                     const input = document.getElementById('amountInput');
                     input.value = data.amount;
@@ -138,12 +155,10 @@
                     document.getElementById('amountInput').style.display = 'none';
                 }
                 
-                // Display account details
                 document.getElementById('accountNumber').textContent = data.account;
                 document.getElementById('sortCode').textContent = data.sort;
                 document.getElementById('reference').textContent = data.reference || 'Not specified';
 
-                // Generate bank buttons
                 const bankGrid = document.getElementById('bankGrid');
                 Object.entries(banks).forEach(([id, bank]) => {
                     const button = document.createElement('div');
@@ -162,7 +177,7 @@
             }
         };
 
-        // Open bank app with payment details
+        // Enhanced bank app opening function with fallback
         function openBankApp(bankId, data) {
             const bank = banks[bankId];
             const amount = document.getElementById('amountInput').style.display === 'none' 
@@ -173,15 +188,4 @@
                 .replace('{account}', data.account)
                 .replace('{sort}', data.sort)
                 .replace('{amount}', amount)
-                .replace('{reference}', data.reference || '')
-                .replace('{name}', encodeURIComponent(data.title || 'Payment'));
-
-            // Log the URL for debugging
-            console.log('Opening URL:', url);
-
-            // Try to open the banking app
-            window.location.href = url;
-        }
-    </script>
-</body>
-</html>
+                .replace('{reference}', data.reference</antArtifact>
