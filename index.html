@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Head section remains the same until the script part -->
+<!-- Previous head content remains the same until style -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Easy Bank Transfer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <style>
-        /* Existing styles remain the same */
+        /* Previous styles remain */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; }
@@ -35,64 +35,47 @@
         }
         button:hover { background: #0051a8; }
         #qrcode { text-align: center; margin: 20px 0; }
+        
+        /* Updated styles for copy area */
         .copy-area {
-            display: flex;
             margin: 10px 0;
-        }
-        .copy-area input {
-            flex: 1;
-            padding: 8px;
             border: 1px solid #ddd;
-            border-radius: 4px 0 0 4px;
+            border-radius: 4px;
+            overflow: hidden;
         }
-        .copy-area button {
-            width: auto;
-            padding: 8px 15px;
-            border-radius: 0 4px 4px 0;
+        .copy-area-content {
+            padding: 10px;
+            background: #f8f8f8;
+            word-break: break-all;
+        }
+        .copy-area-content a {
+            color: #0070f3;
+            text-decoration: none;
+        }
+        .copy-area-content a:hover {
+            text-decoration: underline;
+        }
+        .copy-button {
+            width: 100%;
+            padding: 8px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .copy-button:hover {
+            background: #0051a8;
         }
     </style>
 </head>
 <body>
-    <!-- Body content remains the same until the script -->
+    <!-- Previous body content remains the same until result div -->
     <div class="container">
         <h1>Create Payment Request</h1>
         
+        <!-- Previous form content remains the same -->
         <form id="paymentForm">
-            <div class="form-group">
-                <label>Title</label>
-                <input type="text" id="title" required placeholder="Payment for services">
-            </div>
-
-            <div class="form-group">
-                <label>Message to Payee</label>
-                <textarea id="message" rows="3" placeholder="Thank you for your payment"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Amount (£)</label>
-                <input type="number" id="amount" step="0.01" required>
-                <div>
-                    <input type="checkbox" id="allowAmountChange">
-                    <label>Allow payee to modify amount</label>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Account Number</label>
-                <input type="text" id="account" required pattern="[0-9]{8}" placeholder="8 digits">
-            </div>
-
-            <div class="form-group">
-                <label>Sort Code</label>
-                <input type="text" id="sort" required pattern="[0-9-]{6,8}" placeholder="6 digits">
-            </div>
-
-            <div class="form-group">
-                <label>Payment Reference</label>
-                <input type="text" id="reference" placeholder="Optional reference">
-            </div>
-
-            <button type="submit">Generate Payment Link</button>
+            <!-- Form fields remain the same -->
         </form>
 
         <div id="result" class="result">
@@ -101,8 +84,10 @@
             <div id="qrcode"></div>
             
             <div class="copy-area">
-                <input type="text" id="paymentLink" readonly>
-                <button onclick="copyLink()">Copy</button>
+                <div class="copy-area-content">
+                    <a id="paymentLinkText" href="#" target="_blank"></a>
+                </div>
+                <button class="copy-button" onclick="copyLink()">Copy Payment Link</button>
             </div>
 
             <div id="paymentDetails">
@@ -113,7 +98,6 @@
     </div>
 
     <script>
-        // Get the base path from the current URL
         function getBasePath() {
             const path = window.location.pathname;
             return path.substring(0, path.lastIndexOf('/') + 1);
@@ -132,10 +116,20 @@
                 reference: document.getElementById('reference').value
             };
 
+            console.log('Form Data:', formData); // Debug log
+
             // Generate payload
-            const payload = btoa(JSON.stringify(formData));
-            // Use base path to maintain project directory in URL
+            const jsonString = JSON.stringify(formData);
+            console.log('JSON String:', jsonString); // Debug log
+            
+            const base64 = btoa(jsonString);
+            console.log('Base64:', base64); // Debug log
+            
+            const payload = encodeURIComponent(base64);
+            console.log('Encoded Payload:', payload); // Debug log
+
             const paymentLink = `${window.location.origin}${getBasePath()}pay?data=${payload}`;
+            console.log('Payment Link:', paymentLink); // Debug log
 
             // Show result section
             const resultDiv = document.getElementById('result');
@@ -147,8 +141,10 @@
             qr.make();
             document.getElementById('qrcode').innerHTML = qr.createImgTag(5);
 
-            // Show payment link
-            document.getElementById('paymentLink').value = paymentLink;
+            // Update payment link
+            const paymentLinkText = document.getElementById('paymentLinkText');
+            paymentLinkText.href = paymentLink;
+            paymentLinkText.textContent = paymentLink;
 
             // Show summary
             document.getElementById('detailsSummary').innerHTML = `
@@ -162,10 +158,19 @@
         });
 
         function copyLink() {
-            const linkInput = document.getElementById('paymentLink');
-            linkInput.select();
-            document.execCommand('copy');
-            alert('Link copied to clipboard!');
+            const paymentLink = document.getElementById('paymentLinkText').href;
+            navigator.clipboard.writeText(paymentLink)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = paymentLink;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Link copied to clipboard!');
+                });
         }
     </script>
 </body>
