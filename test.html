@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NatWest App Link Test</title>
+    <title>NatWest Android Link Test</title>
     <style>
         body { 
             font-family: system-ui, -apple-system, sans-serif;
@@ -23,37 +23,22 @@
             font-size: 16px;
             cursor: pointer;
         }
-        button:hover {
-            background: #0d2b5e;
-        }
-        #debug {
-            margin-top: 20px;
+        .debug {
+            margin-top: 10px;
             padding: 10px;
             background: #f0f0f0;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            font-family: monospace;
-        }
-        .status {
-            margin: 10px 0;
-            padding: 10px;
-            background: #e8f4fd;
-            border-radius: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
-    <h1>NatWest App Link Test</h1>
-    <div id="status" class="status">Detecting platform...</div>
-    <div id="buttons"></div>
-    <div id="debug"></div>
+    <h1>NatWest Android Deep Link Test</h1>
+    
+    <div id="linkTests"></div>
 
     <script>
-        const debug = document.getElementById('debug');
-        const status = document.getElementById('status');
-        const buttonsContainer = document.getElementById('buttons');
-
-        // Test data
         const testData = {
             sort: '123456',
             account: '12345678',
@@ -62,99 +47,57 @@
             reference: 'TEST123'
         };
 
-        // Log helper
-        function log(message) {
-            debug.textContent += message + '\n';
-            console.log(message);
-        }
-
-        // Detect platform
-        const ua = navigator.userAgent.toLowerCase();
-        const isiOS = /iphone|ipad|ipod/.test(ua);
-        const isAndroid = /android/.test(ua);
-        status.textContent = `Detected platform: ${isiOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop/Other'}`;
-
-        // Different URL formats to try
-        const urlFormats = {
-            // Official NatWest app store links
-            appStore: 'https://apps.apple.com/gb/app/natwest-mobile-banking/id334855432',
-            playStore: 'https://play.google.com/store/apps/details?id=com.rbs.mobile.android.natwest',
-            
-            // Universal Link (HTTPS)
-            universal: 'https://www.natwest.com/banking-with-natwest/banking-app/making-payments.html',
-            
-            // Deep link attempts
-            deepLink: {
-                ios: [
-                    `natwest://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}&ref=${testData.reference}`,
-                    `nwb://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}`,
-                ],
-                android: [
-                    `intent://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;end`,
-                    `natwest://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}`
-                ]
+        // Different formats to try
+        const tests = [
+            {
+                name: "Android App Links",
+                url: `https://personal.natwest.com/payments/transfer?sortCode=${testData.sort}&accountNumber=${testData.account}&amount=${testData.amount}&reference=${testData.reference}`,
+                description: "Using HTTPS format that should open in app"
+            },
+            {
+                name: "Android Intent with S2S",
+                url: `intent://personal.natwest.com/payments/transfer?sortCode=${testData.sort}&accountNumber=${testData.account}&amount=${testData.amount}&reference=${testData.reference}#Intent;scheme=https;package=com.rbs.mobile.android.natwest;S.browser_fallback_url=https://personal.natwest.com;end`,
+                description: "Using Android Intent with S2S format"
+            },
+            {
+                name: "Market Intent",
+                url: `market://details?id=com.rbs.mobile.android.natwest&url=natwest://payment?sort=${testData.sort}&acc=${testData.account}&amount=${testData.amount}&ref=${testData.reference}`,
+                description: "Using market:// scheme with deep link parameters"
+            },
+            {
+                name: "Direct Intent Format",
+                url: `intent://payment#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.sort=${testData.sort};S.acc=${testData.account};S.amount=${testData.amount};S.ref=${testData.reference};end`,
+                description: "Using direct Intent parameters"
             }
-        };
+        ];
 
-        function createButton(text, action) {
-            const button = document.createElement('button');
-            button.textContent = text;
-            button.onclick = action;
-            buttonsContainer.appendChild(button);
-            return button;
-        }
+        const container = document.getElementById('linkTests');
 
-        function tryOpenApp(url, fallbackUrl) {
-            log(`Attempting to open: ${url}`);
-            
-            // Create hidden iframe for iOS
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-
-            // Set timeout for fallback
-            const fallbackTimeout = setTimeout(() => {
-                log('App not opened, trying fallback...');
-                window.location.href = fallbackUrl;
-            }, 2500);
-
-            // Try opening the app
-            if (isiOS) {
-                // iOS specific handling
-                iframe.onload = () => {
-                    clearTimeout(fallbackTimeout);
-                    document.body.removeChild(iframe);
-                };
-                iframe.src = url;
-            } else {
-                // Android and others
-                window.location.href = url;
-            }
-        }
-
-        // Create platform-specific buttons
-        if (isiOS) {
-            urlFormats.deepLink.ios.forEach((url, index) => {
-                createButton(`Try iOS Deep Link ${index + 1}`, () => {
-                    tryOpenApp(url, urlFormats.appStore);
-                });
-            });
-        } else if (isAndroid) {
-            urlFormats.deepLink.android.forEach((url, index) => {
-                createButton(`Try Android Deep Link ${index + 1}`, () => {
-                    tryOpenApp(url, urlFormats.playStore);
-                });
-            });
-        }
-
-        // Universal fallbacks
-        createButton('Open App Store', () => {
-            window.location.href = isiOS ? urlFormats.appStore : urlFormats.playStore;
+        tests.forEach((test, index) => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <button onclick="tryLink(${index})">${test.name}</button>
+                <div class="debug">
+                    ${test.description}<br>
+                    URL: ${test.url}
+                </div>
+            `;
+            container.appendChild(div);
         });
 
-        createButton('Try Universal Link', () => {
-            window.location.href = urlFormats.universal;
-        });
+        function tryLink(index) {
+            const test = tests[index];
+            console.log(`Trying: ${test.name}`);
+            console.log(`URL: ${test.url}`);
+            
+            // Create a clickable link and trigger it
+            const link = document.createElement('a');
+            link.href = test.url;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </body>
 </html>
