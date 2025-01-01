@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NatWest Link Test Page</title>
+    <title>NatWest App Link Test</title>
     <style>
         body { 
             font-family: system-ui, -apple-system, sans-serif;
@@ -11,82 +11,149 @@
             margin: 20px auto;
             padding: 20px;
         }
-        .test-link {
+        button {
             display: block;
-            margin: 20px 0;
+            width: 100%;
+            margin: 10px 0;
             padding: 15px;
+            background: #1a4896;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0d2b5e;
+        }
+        #debug {
+            margin-top: 20px;
+            padding: 10px;
             background: #f0f0f0;
             border-radius: 8px;
-            text-decoration: none;
-            color: #000;
+            white-space: pre-wrap;
+            font-family: monospace;
         }
-        .test-link:hover {
-            background: #e0e0e0;
-        }
-        .description {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-    <h1>NatWest Link Testing Page</h1>
-    <p>Click each link to test different URL formats for NatWest mobile app deep linking. All links use example data for testing.</p>
-
-    <a href="natwest://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
-        Format 1: Basic URL Scheme
-        <div class="description">natwest://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
-    </a>
-
-    <a href="natwest://?" class="test-link">
-        Format 2: Minimal Test
-        <div class="description">natwest://? (Just testing if the URL scheme is recognized)</div>
-    </a>
-
-    <a href="natwestapp://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
-        Format 3: Alternative Scheme
-        <div class="description">natwestapp://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
-    </a>
-
-    <a href="nwb://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
-        Format 4: Short Scheme
-        <div class="description">nwb://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
-    </a>
-
-    <a href="https://personal.natwest.com/payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
-        Format 5: Web URL
-        <div class="description">https://personal.natwest.com/payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
-    </a>
-
-    <a href="intent://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123#Intent;scheme=natwest;package=com.natwest.mobileBanking;end" class="test-link">
-        Format 6: Android Intent
-        <div class="description">Android Intent format with explicit package name</div>
-    </a>
+    <h1>NatWest App Link Test</h1>
+    <div id="status" class="status">Detecting platform...</div>
+    <div id="buttons"></div>
+    <div id="debug"></div>
 
     <script>
-        // Add click event listeners to log attempts
-        document.querySelectorAll('.test-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                console.log('Attempting to open:', link.href);
-                // Don't prevent default - we want the link to try to open
-                
-                // Show a message that we attempted to open
-                const message = document.createElement('div');
-                message.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: #333;
-                    color: white;
-                    padding: 10px;
-                    border-radius: 5px;
-                    z-index: 1000;
-                `;
-                message.textContent = 'Attempted to open: ' + link.href;
-                document.body.appendChild(message);
-                setTimeout(() => message.remove(), 3000);
+        const debug = document.getElementById('debug');
+        const status = document.getElementById('status');
+        const buttonsContainer = document.getElementById('buttons');
+
+        // Test data
+        const testData = {
+            sort: '123456',
+            account: '12345678',
+            name: 'Test Payment',
+            amount: '10.00',
+            reference: 'TEST123'
+        };
+
+        // Log helper
+        function log(message) {
+            debug.textContent += message + '\n';
+            console.log(message);
+        }
+
+        // Detect platform
+        const ua = navigator.userAgent.toLowerCase();
+        const isiOS = /iphone|ipad|ipod/.test(ua);
+        const isAndroid = /android/.test(ua);
+        status.textContent = `Detected platform: ${isiOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop/Other'}`;
+
+        // Different URL formats to try
+        const urlFormats = {
+            // Official NatWest app store links
+            appStore: 'https://apps.apple.com/gb/app/natwest-mobile-banking/id334855432',
+            playStore: 'https://play.google.com/store/apps/details?id=com.rbs.mobile.android.natwest',
+            
+            // Universal Link (HTTPS)
+            universal: 'https://www.natwest.com/banking-with-natwest/banking-app/making-payments.html',
+            
+            // Deep link attempts
+            deepLink: {
+                ios: [
+                    `natwest://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}&ref=${testData.reference}`,
+                    `nwb://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}`,
+                ],
+                android: [
+                    `intent://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;end`,
+                    `natwest://payment?sort=${testData.sort}&acc=${testData.account}&name=${encodeURIComponent(testData.name)}&amount=${testData.amount}`
+                ]
+            }
+        };
+
+        function createButton(text, action) {
+            const button = document.createElement('button');
+            button.textContent = text;
+            button.onclick = action;
+            buttonsContainer.appendChild(button);
+            return button;
+        }
+
+        function tryOpenApp(url, fallbackUrl) {
+            log(`Attempting to open: ${url}`);
+            
+            // Create hidden iframe for iOS
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
+            // Set timeout for fallback
+            const fallbackTimeout = setTimeout(() => {
+                log('App not opened, trying fallback...');
+                window.location.href = fallbackUrl;
+            }, 2500);
+
+            // Try opening the app
+            if (isiOS) {
+                // iOS specific handling
+                iframe.onload = () => {
+                    clearTimeout(fallbackTimeout);
+                    document.body.removeChild(iframe);
+                };
+                iframe.src = url;
+            } else {
+                // Android and others
+                window.location.href = url;
+            }
+        }
+
+        // Create platform-specific buttons
+        if (isiOS) {
+            urlFormats.deepLink.ios.forEach((url, index) => {
+                createButton(`Try iOS Deep Link ${index + 1}`, () => {
+                    tryOpenApp(url, urlFormats.appStore);
+                });
             });
+        } else if (isAndroid) {
+            urlFormats.deepLink.android.forEach((url, index) => {
+                createButton(`Try Android Deep Link ${index + 1}`, () => {
+                    tryOpenApp(url, urlFormats.playStore);
+                });
+            });
+        }
+
+        // Universal fallbacks
+        createButton('Open App Store', () => {
+            window.location.href = isiOS ? urlFormats.appStore : urlFormats.playStore;
+        });
+
+        createButton('Try Universal Link', () => {
+            window.location.href = urlFormats.universal;
         });
     </script>
 </body>
