@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NatWest Android Link Test</title>
+    <title>NatWest Payment Link Test</title>
     <style>
         body { 
             font-family: system-ui, -apple-system, sans-serif;
@@ -30,11 +30,13 @@
             border-radius: 4px;
             font-size: 12px;
             word-break: break-all;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
-    <h1>NatWest Android Deep Link Test</h1>
+    <h1>NatWest Payment Link Test</h1>
+    <p>Testing different payment parameter formats for Android 15</p>
     
     <div id="linkTests"></div>
 
@@ -47,27 +49,42 @@
             reference: 'TEST123'
         };
 
-        // Different formats to try
+        // Different parameter formats to try
         const tests = [
             {
-                name: "Android App Links",
-                url: `https://personal.natwest.com/payments/transfer?sortCode=${testData.sort}&accountNumber=${testData.account}&amount=${testData.amount}&reference=${testData.reference}`,
-                description: "Using HTTPS format that should open in app"
+                name: "Direct Payment Intent 1",
+                url: `intent://payments#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.action=payment;S.sortCode=${testData.sort};S.accountNumber=${testData.account};S.amount=${testData.amount};S.reference=${testData.reference};end`,
+                description: "Using payment action with full parameter names"
             },
             {
-                name: "Android Intent with S2S",
-                url: `intent://personal.natwest.com/payments/transfer?sortCode=${testData.sort}&accountNumber=${testData.account}&amount=${testData.amount}&reference=${testData.reference}#Intent;scheme=https;package=com.rbs.mobile.android.natwest;S.browser_fallback_url=https://personal.natwest.com;end`,
-                description: "Using Android Intent with S2S format"
+                name: "Direct Payment Intent 2",
+                url: `intent://transfer#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.type=payment;S.sort=${testData.sort};S.acc=${testData.account};S.amount=${testData.amount};S.ref=${testData.reference};end`,
+                description: "Using transfer endpoint with short parameter names"
             },
             {
-                name: "Market Intent",
-                url: `market://details?id=com.rbs.mobile.android.natwest&url=natwest://payment?sort=${testData.sort}&acc=${testData.account}&amount=${testData.amount}&ref=${testData.reference}`,
-                description: "Using market:// scheme with deep link parameters"
+                name: "Market Link with Payment",
+                url: `market://details?id=com.rbs.mobile.android.natwest&referrer=payment%3Fsort%3D${testData.sort}%26acc%3D${testData.account}%26amount%3D${testData.amount}%26ref%3D${testData.reference}`,
+                description: "Using market link with payment parameters in referrer"
             },
             {
-                name: "Direct Intent Format",
-                url: `intent://payment#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.sort=${testData.sort};S.acc=${testData.account};S.amount=${testData.amount};S.ref=${testData.reference};end`,
-                description: "Using direct Intent parameters"
+                name: "Payment Through App Links",
+                url: `intent://personal.natwest.com/payment#Intent;scheme=https;package=com.rbs.mobile.android.natwest;S.payment_data=${encodeURIComponent(JSON.stringify({
+                    sortCode: testData.sort,
+                    accountNumber: testData.account,
+                    amount: testData.amount,
+                    reference: testData.reference
+                }))};end`,
+                description: "Using app links with JSON payment data"
+            },
+            {
+                name: "Mobile Banking Intent",
+                url: `intent://mobilebanking/payment#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.sortCode=${testData.sort};S.accountNumber=${testData.account};S.amount=${testData.amount};S.reference=${testData.reference};end`,
+                description: "Using mobilebanking endpoint"
+            },
+            {
+                name: "Simple Payment URI",
+                url: `natwest://mobilebanking/payment?sortCode=${testData.sort}&accountNumber=${testData.account}&amount=${testData.amount}&reference=${testData.reference}`,
+                description: "Simple URI format with mobilebanking path"
             }
         ];
 
@@ -90,13 +107,12 @@
             console.log(`Trying: ${test.name}`);
             console.log(`URL: ${test.url}`);
             
-            // Create a clickable link and trigger it
-            const link = document.createElement('a');
-            link.href = test.url;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            try {
+                window.location.href = test.url;
+            } catch (e) {
+                console.error('Error opening link:', e);
+                alert('Error opening link: ' + e.message);
+            }
         }
     </script>
 </body>
