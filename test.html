@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NatWest Link Test Page</title>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-link {
+            display: block;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #000;
+        }
+        .test-link:hover {
+            background: #e0e0e0;
+        }
+        .description {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>NatWest Link Testing Page</h1>
+    <p>Click each link to test different URL formats for NatWest mobile app deep linking. All links use example data for testing.</p>
+
+    <a href="natwest://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
+        Format 1: Basic URL Scheme
+        <div class="description">natwest://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
+    </a>
+
+    <a href="natwest://?" class="test-link">
+        Format 2: Minimal Test
+        <div class="description">natwest://? (Just testing if the URL scheme is recognized)</div>
+    </a>
+
+    <a href="natwestapp://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
+        Format 3: Alternative Scheme
+        <div class="description">natwestapp://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
+    </a>
+
+    <a href="nwb://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
+        Format 4: Short Scheme
+        <div class="description">nwb://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
+    </a>
+
+    <a href="https://personal.natwest.com/payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123" class="test-link">
+        Format 5: Web URL
+        <div class="description">https://personal.natwest.com/payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123</div>
+    </a>
+
+    <a href="intent://payment?sort=123456&acc=12345678&name=Test%20Payment&amount=10.00&ref=TEST123#Intent;scheme=natwest;package=com.natwest.mobileBanking;end" class="test-link">
+        Format 6: Android Intent
+        <div class="description">Android Intent format with explicit package name</div>
+    </a>
+
+    <script>
+        // Add click event listeners to log attempts
+        document.querySelectorAll('.test-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                console.log('Attempting to open:', link.href);
+                // Don't prevent default - we want the link to try to open
+                
+                // Show a message that we attempted to open
+                const message = document.createElement('div');
+                message.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #333;
+                    color: white;
+                    padding: 10px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                `;
+                message.textContent = 'Attempted to open: ' + link.href;
+                document.body.appendChild(message);
+                setTimeout(() => message.remove(), 3000);
+            });
+        });
+    </script>
+</body>
+</html>
