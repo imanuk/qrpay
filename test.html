@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NatWest Payment Link Test</title>
+    <title>NatWest Link Analyzer</title>
     <style>
         body { 
             font-family: system-ui, -apple-system, sans-serif;
@@ -23,97 +23,135 @@
             font-size: 16px;
             cursor: pointer;
         }
-        .debug {
-            margin-top: 10px;
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        #log {
+            margin-top: 20px;
             padding: 10px;
             background: #f0f0f0;
             border-radius: 4px;
-            font-size: 12px;
-            word-break: break-all;
             font-family: monospace;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-    <h1>NatWest Payment Link Test</h1>
-    <p>Testing different payment parameter formats for Android 15</p>
+    <h1>NatWest Link Analyzer</h1>
     
-    <div id="linkTests"></div>
+    <div class="test-section">
+        <h3>URL Detection Test</h3>
+        <p>This will help us understand what URL schemes your device recognizes for NatWest.</p>
+        <button onclick="testUrlScheme('natwest')">Test natwest:// scheme</button>
+        <button onclick="testUrlScheme('nwb')">Test nwb:// scheme</button>
+        <button onclick="testUrlScheme('natwestapp')">Test natwestapp:// scheme</button>
+        <button onclick="testUrlScheme('com.rbs.mobile.android.natwest')">Test package scheme</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Manual URL Test</h3>
+        <p>Enter a URL to test (e.g., from NatWest documentation or app sharing):</p>
+        <input type="text" id="manualUrl" style="width: 100%; padding: 8px; margin-bottom: 10px;"
+               placeholder="Enter URL to test">
+        <button onclick="testManualUrl()">Test URL</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Share Link</h3>
+        <p>If you can share a payment link from within the NatWest app, paste it here to analyze its format:</p>
+        <input type="text" id="sharedUrl" style="width: 100%; padding: 8px; margin-bottom: 10px;"
+               placeholder="Paste shared URL from NatWest app">
+        <button onclick="analyzeSharedUrl()">Analyze URL</button>
+    </div>
+
+    <div id="log"></div>
 
     <script>
-        const testData = {
-            sort: '123456',
-            account: '12345678',
-            name: 'Test Payment',
-            amount: '10.00',
-            reference: 'TEST123'
-        };
+        const log = document.getElementById('log');
 
-        // Different parameter formats to try
-        const tests = [
-            {
-                name: "Direct Payment Intent 1",
-                url: `intent://payments#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.action=payment;S.sortCode=${testData.sort};S.accountNumber=${testData.account};S.amount=${testData.amount};S.reference=${testData.reference};end`,
-                description: "Using payment action with full parameter names"
-            },
-            {
-                name: "Direct Payment Intent 2",
-                url: `intent://transfer#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.type=payment;S.sort=${testData.sort};S.acc=${testData.account};S.amount=${testData.amount};S.ref=${testData.reference};end`,
-                description: "Using transfer endpoint with short parameter names"
-            },
-            {
-                name: "Market Link with Payment",
-                url: `market://details?id=com.rbs.mobile.android.natwest&referrer=payment%3Fsort%3D${testData.sort}%26acc%3D${testData.account}%26amount%3D${testData.amount}%26ref%3D${testData.reference}`,
-                description: "Using market link with payment parameters in referrer"
-            },
-            {
-                name: "Payment Through App Links",
-                url: `intent://personal.natwest.com/payment#Intent;scheme=https;package=com.rbs.mobile.android.natwest;S.payment_data=${encodeURIComponent(JSON.stringify({
-                    sortCode: testData.sort,
-                    accountNumber: testData.account,
-                    amount: testData.amount,
-                    reference: testData.reference
-                }))};end`,
-                description: "Using app links with JSON payment data"
-            },
-            {
-                name: "Mobile Banking Intent",
-                url: `intent://mobilebanking/payment#Intent;scheme=natwest;package=com.rbs.mobile.android.natwest;S.sortCode=${testData.sort};S.accountNumber=${testData.account};S.amount=${testData.amount};S.reference=${testData.reference};end`,
-                description: "Using mobilebanking endpoint"
-            },
-            {
-                name: "Simple Payment URI",
-                url: `natwest://mobilebanking/payment?sortCode=${testData.sort}&accountNumber=${testData.account}&amount=${testData.amount}&reference=${testData.reference}`,
-                description: "Simple URI format with mobilebanking path"
-            }
-        ];
+        function addLog(message) {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            log.textContent += `[${timestamp}] ${message}\n`;
+            console.log(message);
+        }
 
-        const container = document.getElementById('linkTests');
-
-        tests.forEach((test, index) => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <button onclick="tryLink(${index})">${test.name}</button>
-                <div class="debug">
-                    ${test.description}<br>
-                    URL: ${test.url}
-                </div>
-            `;
-            container.appendChild(div);
-        });
-
-        function tryLink(index) {
-            const test = tests[index];
-            console.log(`Trying: ${test.name}`);
-            console.log(`URL: ${test.url}`);
+        function testUrlScheme(scheme) {
+            const testUrl = `${scheme}://test`;
+            addLog(`Testing URL scheme: ${testUrl}`);
             
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
             try {
-                window.location.href = test.url;
+                iframe.contentWindow.location.href = testUrl;
+                addLog('URL scheme attempt initiated');
             } catch (e) {
-                console.error('Error opening link:', e);
-                alert('Error opening link: ' + e.message);
+                addLog(`Error with scheme ${scheme}: ${e.message}`);
+            }
+
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                addLog(`Test complete for ${scheme}`);
+            }, 1000);
+        }
+
+        function testManualUrl() {
+            const url = document.getElementById('manualUrl').value.trim();
+            if (!url) {
+                addLog('Please enter a URL to test');
+                return;
+            }
+
+            addLog(`Testing manual URL: ${url}`);
+            try {
+                window.location.href = url;
+            } catch (e) {
+                addLog(`Error testing URL: ${e.message}`);
             }
         }
+
+        function analyzeSharedUrl() {
+            const url = document.getElementById('sharedUrl').value.trim();
+            if (!url) {
+                addLog('Please paste a shared URL to analyze');
+                return;
+            }
+
+            addLog('Analyzing shared URL structure:');
+            addLog(`Full URL: ${url}`);
+
+            try {
+                const urlObj = new URL(url);
+                addLog(`Scheme: ${urlObj.protocol}`);
+                addLog(`Path: ${urlObj.pathname}`);
+                addLog(`Query parameters:`);
+                for (const [key, value] of urlObj.searchParams) {
+                    addLog(`  ${key}: ${value}`);
+                }
+            } catch (e) {
+                if (url.includes('://')) {
+                    const parts = url.split('://');
+                    addLog(`Custom scheme: ${parts[0]}`);
+                    addLog(`Path and params: ${parts[1]}`);
+                }
+            }
+        }
+
+        // On page load, check for URL scheme support
+        window.onload = function() {
+            addLog('Checking NatWest app integration capabilities...');
+            addLog(`User Agent: ${navigator.userAgent}`);
+            if ('Intent' in window) {
+                addLog('Android Intent API available');
+            }
+            if ('universalLinks' in window) {
+                addLog('Universal Links API available');
+            }
+        };
     </script>
 </body>
 </html>
